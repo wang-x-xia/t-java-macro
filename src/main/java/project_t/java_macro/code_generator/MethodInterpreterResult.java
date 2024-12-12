@@ -8,6 +8,10 @@ public sealed class MethodInterpreterResult {
         public static final NoValue INSTANCE = new NoValue();
     }
 
+    public MethodInterpreterResult.Value asValue() {
+        return (Value) this;
+    }
+
     static MethodInterpreterResult noValue() {
         return NoValue.INSTANCE;
     }
@@ -19,8 +23,56 @@ public sealed class MethodInterpreterResult {
             this.value = value;
         }
 
-        public Object getValue() {
+        public Object get() {
             return value;
+        }
+
+        public boolean bool() {
+            if (value instanceof Boolean) {
+                return (Boolean) value;
+            } else {
+                throw new AssertionError("Not a boolean value: " + value);
+            }
+        }
+
+        public double asDouble() {
+            if (value instanceof Number) {
+                return ((Number) value).doubleValue();
+            } else if (value instanceof Character) {
+                return (Character) value;
+            } else {
+                throw new AssertionError("Not a double value: " + value);
+            }
+        }
+
+        public float asFloat() {
+            if (value instanceof Number) {
+                return ((Number) value).floatValue();
+            } else if (value instanceof Character) {
+                return (Character) value;
+            } else {
+                throw new AssertionError("Not a float value: " + value);
+            }
+        }
+
+        public long asLong() {
+            if (value instanceof Number) {
+                return ((Number) value).longValue();
+            } else if (value instanceof Character) {
+                return (Character) value;
+            } else {
+                throw new AssertionError("Not a long value: " + value);
+            }
+        }
+
+        public int asInt() {
+            if (value instanceof Number) {
+                return ((Number) value).intValue();
+            } else if (value instanceof Character) {
+                return (Character) value;
+            } else {
+                throw new AssertionError("Not a int value: " + value);
+            }
         }
 
         @Override

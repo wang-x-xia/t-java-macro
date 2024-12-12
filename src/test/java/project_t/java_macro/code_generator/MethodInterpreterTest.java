@@ -42,7 +42,7 @@ class MethodInterpreterTest {
                         assertEquals(MethodInterpreterResult.noValue(), actual,
                                 "Void method should return no value");
                     } else {
-                        assertEquals(MethodInterpreterResult.of(method.invoke(this)), actual,
+                        assertEquals(method.invoke(this), actual.asValue().get(),
                                 "Method should return expected value");
                     }
                 }));
@@ -92,4 +92,28 @@ class MethodInterpreterTest {
         return "ok".length();
     }
 
+    @NoArgTest
+    public boolean boolAnd() {
+        return true && false;
+    }
+
+    @NoArgTest
+    public boolean boolOr() {
+        return false || true;
+    }
+
+    @NoArgTest
+    public int addInt() {
+        return 1 + 'a';
+    }
+
+    @NoArgTest
+    public long addLong() {
+        return 1L + 100;
+    }
+
+    @NoArgTest
+    public double addDouble() {
+        return 1 + 0.5;
+    }
 }
