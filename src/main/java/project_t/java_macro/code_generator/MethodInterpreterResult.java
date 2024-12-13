@@ -16,7 +16,7 @@ public sealed class MethodInterpreterResult {
         return NoValue.INSTANCE;
     }
 
-    final static class Value extends MethodInterpreterResult {
+    public final static class Value extends MethodInterpreterResult {
         private final Object value;
 
         Value(Object value) {
