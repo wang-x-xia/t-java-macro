@@ -40,7 +40,7 @@ public abstract class MethodMappingTest {
         MethodMapping methodMapping = new MethodMapping();
         MethodDeclaration generated = methodMapping.visit(source, null);
 
-        assertEquals(expectedGenerated.getBody().orElseThrow(), generated.getBody().orElseThrow(), "Generated should be match");
+        assertEquals(expectedGenerated, generated, "Generated should be match");
     }
 
 }
