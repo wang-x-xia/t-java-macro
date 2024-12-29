@@ -11,13 +11,28 @@ import com.github.javaparser.ast.stmt.IfStmt;
 import com.github.javaparser.ast.stmt.Statement;
 import com.github.javaparser.ast.visitor.GenericVisitorWithDefaults;
 import com.github.javaparser.ast.visitor.Visitable;
+import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration;
+import com.github.javaparser.utils.TypeUtils;
 import project_t.java_macro.pipe.ShortCircuitConditionPipe;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.function.UnaryOperator;
 
 public class MethodMapping extends GenericVisitorWithDefaults<Visitable, Void> {
 
-    private static final ThreadLocal<String> methodName = new ThreadLocal<>();
+    static final ThreadLocal<List<UnaryOperator<MethodDeclaration>>> CUSTOMIZER = new ThreadLocal<>();
+
+    static void addCustomizer(UnaryOperator<MethodDeclaration> customizer) {
+        List<UnaryOperator<MethodDeclaration>> operators = CUSTOMIZER.get();
+        if (operators == null) {
+            CUSTOMIZER.set(new ArrayList<>());
+        }
+        CUSTOMIZER.get().add(customizer);
+    }
 
     @Override
     public BlockStmt visit(BlockStmt n, Void arg) {
@@ -70,9 +85,17 @@ public class MethodMapping extends GenericVisitorWithDefaults<Visitable, Void> {
 
     @Override
     public Visitable visit(MethodCallExpr n, Void arg) {
-        if (n.getName().asString().equals("setMethodName")) {
-            methodName.set(n.getArguments().get(0).asStringLiteralExpr().getValue());
-            return null;
+        ResolvedMethodDeclaration resolved = n.resolve();
+        try {
+            Class<?> clazz = Class.forName(resolved.declaringType().getQualifiedName());
+            Method method = Arrays.stream(clazz.getMethods()).filter(it -> TypeUtils.getMethodDescriptor(it).equals(resolved.toDescriptor())).findAny()
+                    .orElseThrow();
+            if (method.isAnnotationPresent(EngineCall.class)) {
+                method.invoke(null, n.getArguments().stream().map(it -> it.asStringLiteralExpr().asString()).toArray());
+                return null;
+            }
+        } catch (ClassNotFoundException | InvocationTargetException | IllegalAccessException e) {
+            throw new RuntimeException(e);
         }
         return n;
     }
@@ -87,13 +110,15 @@ public class MethodMapping extends GenericVisitorWithDefaults<Visitable, Void> {
             if (newBody != body) {
                 changed = true;
             }
-            if (!changed && methodName.get() == null) {
+            if (!changed && CUSTOMIZER.get() == null) {
                 return n;
             }
             n = n.clone();
-            if (methodName.get() != null) {
-                n.setName(methodName.get());
-                methodName.remove();
+            if (CUSTOMIZER.get() != null) {
+                for (UnaryOperator<MethodDeclaration> customizer : CUSTOMIZER.get()) {
+                    n = customizer.apply(n);
+                }
+                CUSTOMIZER.remove();
             }
             n.setBody(newBody);
             changed = false;
