@@ -17,356 +17,91 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
 
-public class MethodInterpreter extends GenericVisitorWithDefaults<MethodInterpreterResult, MethodInterpreterContext> {
+public class MethodInterpreter extends GenericVisitorWithDefaults<MethodInterpreter.Result, MethodInterpreterContext> {
 
-    @Override
-    public MethodInterpreterResult visit(BinaryExpr n, MethodInterpreterContext arg) {
-        MethodInterpreterResult.Value left = n.getLeft().accept(this, arg).asValue();
-        switch (n.getOperator()) {
-            case OR -> {
-                if (left.bool()) {
-                    return left;
-                } else {
-                    return n.getRight().accept(this, arg);
-                }
-            }
-            case AND -> {
-                if (left.bool()) {
-                    return n.getRight().accept(this, arg);
-                } else {
-                    return left;
-                }
-            }
-        }
-        MethodInterpreterResult.Value right = n.getRight().accept(this, arg).asValue();
-        switch (n.getOperator()) {
-            case BINARY_OR -> {
-                if (left.get() instanceof Boolean) {
-                    return MethodInterpreterResult.of(left.bool() | right.bool());
-                }
-                switch (numericPromotion(List.of(left, right))) {
-                    case LONG -> {
-                        return MethodInterpreterResult.of(left.asLong() | right.asLong());
-                    }
-                    case INT -> {
-                        return MethodInterpreterResult.of(left.asInt() | right.asInt());
-                    }
-                    default -> throw new AssertionError();
-                }
-            }
-            case BINARY_AND -> {
-                if (left.get() instanceof Boolean) {
-                    return MethodInterpreterResult.of(left.bool() & right.bool());
-                }
-                switch (numericPromotion(List.of(left, right))) {
-                    case LONG -> {
-                        return MethodInterpreterResult.of(left.asLong() & right.asLong());
-                    }
-                    case INT -> {
-                        return MethodInterpreterResult.of(left.asInt() & right.asInt());
-                    }
-                    default -> throw new AssertionError();
-                }
-            }
-            case XOR -> {
-                if (left.get() instanceof Boolean) {
-                    return MethodInterpreterResult.of(left.bool() ^ right.bool());
-                }
-                switch (numericPromotion(List.of(left, right))) {
-                    case LONG -> {
-                        return MethodInterpreterResult.of(left.asLong() ^ right.asLong());
-                    }
-                    case INT -> {
-                        return MethodInterpreterResult.of(left.asInt() ^ right.asInt());
-                    }
-                    default -> throw new AssertionError();
-                }
-            }
-            case EQUALS -> {
-                return MethodInterpreterResult.of(left.get() == right.get());
-            }
-            case NOT_EQUALS -> {
-                return MethodInterpreterResult.of(left.get() != right.get());
-            }
-            case LESS -> {
-                switch (numericPromotion(List.of(left, right))) {
-                    case DOUBLE -> {
-                        return MethodInterpreterResult.of(left.asDouble() < right.asDouble());
-                    }
-                    case FLOAT -> {
-                        return MethodInterpreterResult.of(left.asFloat() < right.asFloat());
-                    }
-                    case LONG -> {
-                        return MethodInterpreterResult.of(left.asLong() < right.asLong());
-                    }
-                    case INT -> {
-                        return MethodInterpreterResult.of(left.asInt() < right.asInt());
-                    }
-                    default -> throw new AssertionError();
-                }
-            }
-            case GREATER -> {
-                switch (numericPromotion(List.of(left, right))) {
-                    case DOUBLE -> {
-                        return MethodInterpreterResult.of(left.asDouble() > right.asDouble());
-                    }
-                    case FLOAT -> {
-                        return MethodInterpreterResult.of(left.asFloat() > right.asFloat());
-                    }
-                    case LONG -> {
-                        return MethodInterpreterResult.of(left.asLong() > right.asLong());
-                    }
-                    case INT -> {
-                        return MethodInterpreterResult.of(left.asInt() > right.asInt());
-                    }
-                    default -> throw new AssertionError();
-                }
-            }
-            case LESS_EQUALS -> {
-                switch (numericPromotion(List.of(left, right))) {
-                    case DOUBLE -> {
-                        return MethodInterpreterResult.of(left.asDouble() <= right.asDouble());
-                    }
-                    case FLOAT -> {
-                        return MethodInterpreterResult.of(left.asFloat() <= right.asFloat());
-                    }
-                    case LONG -> {
-                        return MethodInterpreterResult.of(left.asLong() <= right.asLong());
-                    }
-                    case INT -> {
-                        return MethodInterpreterResult.of(left.asInt() <= right.asInt());
-                    }
-                    default -> throw new AssertionError();
-                }
-
-            }
-            case GREATER_EQUALS -> {
-                switch (numericPromotion(List.of(left, right))) {
-                    case DOUBLE -> {
-                        return MethodInterpreterResult.of(left.asDouble() >= right.asDouble());
-                    }
-                    case FLOAT -> {
-                        return MethodInterpreterResult.of(left.asFloat() >= right.asFloat());
-                    }
-                    case LONG -> {
-                        return MethodInterpreterResult.of(left.asLong() >= right.asLong());
-                    }
-                    case INT -> {
-                        return MethodInterpreterResult.of(left.asInt() >= right.asInt());
-                    }
-                    default -> throw new AssertionError();
-                }
-            }
-            case LEFT_SHIFT -> {
-                if (left.get() instanceof Long) {
-                    return MethodInterpreterResult.of(left.asLong() << right.asInt());
-                } else if (left.get() instanceof Integer) {
-                    return MethodInterpreterResult.of(left.asInt() << right.asInt());
-                } else {
-                    throw new AssertionError();
-                }
-            }
-            case SIGNED_RIGHT_SHIFT -> {
-                if (left.get() instanceof Long) {
-                    return MethodInterpreterResult.of(left.asLong() >> right.asInt());
-                } else if (left.get() instanceof Integer) {
-                    return MethodInterpreterResult.of(left.asInt() >> right.asInt());
-                } else {
-                    throw new AssertionError();
-                }
-            }
-            case UNSIGNED_RIGHT_SHIFT -> {
-                if (left.get() instanceof Long) {
-                    return MethodInterpreterResult.of(left.asLong() >>> right.asInt());
-                } else if (left.get() instanceof Integer) {
-                    return MethodInterpreterResult.of(left.asInt() >>> right.asInt());
-                } else {
-                    throw new AssertionError();
-                }
-            }
-            case PLUS -> {
-                switch (numericPromotion(List.of(left, right))) {
-                    case DOUBLE -> {
-                        return MethodInterpreterResult.of(left.asDouble() + right.asDouble());
-                    }
-                    case FLOAT -> {
-                        return MethodInterpreterResult.of(left.asFloat() + right.asFloat());
-                    }
-                    case LONG -> {
-                        return MethodInterpreterResult.of(left.asLong() + right.asLong());
-                    }
-                    case INT -> {
-                        return MethodInterpreterResult.of(left.asInt() + right.asInt());
-                    }
-                    default -> throw new AssertionError();
-                }
-            }
-            case MINUS -> {
-                switch (numericPromotion(List.of(left, right))) {
-                    case DOUBLE -> {
-                        return MethodInterpreterResult.of(left.asDouble() - right.asDouble());
-                    }
-                    case FLOAT -> {
-                        return MethodInterpreterResult.of(left.asFloat() - right.asFloat());
-                    }
-                    case LONG -> {
-                        return MethodInterpreterResult.of(left.asLong() - right.asLong());
-                    }
-                    case INT -> {
-                        return MethodInterpreterResult.of(left.asInt() - right.asInt());
-                    }
-                    default -> throw new AssertionError();
-                }
-            }
-            case MULTIPLY -> {
-                switch (numericPromotion(List.of(left, right))) {
-                    case DOUBLE -> {
-                        return MethodInterpreterResult.of(left.asDouble() * right.asDouble());
-                    }
-                    case FLOAT -> {
-                        return MethodInterpreterResult.of(left.asFloat() * right.asFloat());
-                    }
-                    case LONG -> {
-                        return MethodInterpreterResult.of(left.asLong() * right.asLong());
-                    }
-                    case INT -> {
-                        return MethodInterpreterResult.of(left.asInt() * right.asInt());
-                    }
-                    default -> throw new AssertionError();
-                }
-            }
-            case DIVIDE -> {
-                switch (numericPromotion(List.of(left, right))) {
-                    case DOUBLE -> {
-                        return MethodInterpreterResult.of(left.asDouble() / right.asDouble());
-                    }
-                    case FLOAT -> {
-                        return MethodInterpreterResult.of(left.asFloat() / right.asFloat());
-                    }
-                    case LONG -> {
-                        return MethodInterpreterResult.of(left.asLong() / right.asLong());
-                    }
-                    case INT -> {
-                        return MethodInterpreterResult.of(left.asInt() / right.asInt());
-                    }
-                    default -> throw new AssertionError();
-                }
-            }
-            case REMAINDER -> {
-                switch (numericPromotion(List.of(left, right))) {
-                    case DOUBLE -> {
-                        return MethodInterpreterResult.of(left.asDouble() % right.asDouble());
-                    }
-                    case FLOAT -> {
-                        return MethodInterpreterResult.of(left.asFloat() % right.asFloat());
-                    }
-                    case LONG -> {
-                        return MethodInterpreterResult.of(left.asLong() % right.asLong());
-                    }
-                    case INT -> {
-                        return MethodInterpreterResult.of(left.asInt() % right.asInt());
-                    }
-                    default -> throw new AssertionError();
-                }
-            }
-            default -> throw new AssertionError();
-        }
-    }
-
-    public enum NumberType {
-        DOUBLE,
-        FLOAT,
-        LONG,
-        INT,
-    }
-
-    /**
-     * <a href="https://docs.oracle.com/javase/specs/jls/se21/html/jls-5.html#jls-5.6">5.6. Numeric Contexts</a>
-     */
-    public NumberType numericPromotion(List<MethodInterpreterResult.Value> values) {
-        if (values.stream().anyMatch(it -> it.get() instanceof Double)) {
-            return NumberType.DOUBLE;
-        }
-        if (values.stream().anyMatch(it -> it.get() instanceof Float)) {
-            return NumberType.FLOAT;
-        }
-        if (values.stream().anyMatch(it -> it.get() instanceof Long)) {
-            return NumberType.LONG;
-        }
-        return NumberType.INT;
+    public record Result(MethodInterpreterValue value, MethodInterpreterContext context) {
     }
 
     @Override
-    public MethodInterpreterResult visit(BlockStmt n, MethodInterpreterContext arg) {
+    public Result visit(BlockStmt n, MethodInterpreterContext ctx) {
+        MethodInterpreterContext block = ctx.enterBlock();
+        ctx = block;
         NodeList<Statement> list = n.getStatements();
         for (Statement statement : list) {
-            MethodInterpreterResult result = statement.accept(this, arg);
-            if (result instanceof MethodInterpreterResult.Value) {
+            Result result = statement.accept(this, ctx);
+            if (result.value().hasValue()) {
                 // If the statement return value, return it and skip following statements
-                return result;
+                return new Result(result.value(), result.context().exitBlock(block));
             }
+            ctx = result.context();
         }
-        return MethodInterpreterResult.noValue();
+        return new Result(MethodInterpreterValue.noValue(), ctx.exitBlock(block));
     }
 
     @Override
-    public MethodInterpreterResult visit(BooleanLiteralExpr n, MethodInterpreterContext arg) {
-        return MethodInterpreterResult.of(n.getValue());
+    public Result visit(BooleanLiteralExpr n, MethodInterpreterContext ctx) {
+        return new Result(MethodInterpreterValue.of(n.getValue()), ctx);
     }
 
     @Override
-    public MethodInterpreterResult visit(CharLiteralExpr n, MethodInterpreterContext arg) {
-        return MethodInterpreterResult.of(n.asChar());
+    public Result visit(CharLiteralExpr n, MethodInterpreterContext ctx) {
+        return new Result(MethodInterpreterValue.of(n.asChar()), ctx);
     }
 
     @Override
-    public MethodInterpreterResult visit(DoubleLiteralExpr n, MethodInterpreterContext arg) {
-        return MethodInterpreterResult.of(n.asDouble());
+    public Result visit(DoubleLiteralExpr n, MethodInterpreterContext ctx) {
+        return new Result(MethodInterpreterValue.of(n.asDouble()), ctx);
     }
 
     @Override
-    public MethodInterpreterResult visit(IfStmt n, MethodInterpreterContext arg) {
-        MethodInterpreterResult condition = n.getCondition().accept(this, arg);
-        if (!(condition instanceof MethodInterpreterResult.Value)) {
-            throw new RuntimeException("Unknown result of condition: " + condition);
+    public Result visit(IfStmt n, MethodInterpreterContext ctx) {
+        Result condition = n.getCondition().accept(this, ctx);
+        if (condition.context() != ctx) {
+            // TODO
+            throw new RuntimeException("Current interpreter can't process pattern match");
         }
-        Object conditionValue = condition.asValue().get();
-        if (!(conditionValue instanceof Boolean)) {
-            throw new RuntimeException("Unknown type of condition value: " + condition);
+        if (!(condition.value().hasValue())) {
+            throw new RuntimeException("The if condition must have return value");
         }
-        if ((Boolean) conditionValue) {
-            return n.getThenStmt().accept(this, arg);
+        if (condition.value().isUnknown()) {
+            throw new RuntimeException("Current interpreter can't process unknown if");
+        } else if (condition.value().bool()) {
+            return n.getThenStmt().accept(this, ctx);
         } else {
-            return n.getElseStmt().map(s -> s.accept(this, arg)).orElse(MethodInterpreterResult.noValue());
+            if (n.getElseStmt().isEmpty()) {
+                // No value, no changed ctx
+                return new Result(MethodInterpreterValue.noValue(), ctx);
+            }
+            return n.getElseStmt().get().accept(this, ctx);
         }
     }
 
 
     @Override
-    public MethodInterpreterResult visit(IntegerLiteralExpr n, MethodInterpreterContext arg) {
-        return MethodInterpreterResult.of(n.asNumber());
+    public Result visit(IntegerLiteralExpr n, MethodInterpreterContext ctx) {
+        return new Result(MethodInterpreterValue.of(n.asNumber()), ctx);
     }
 
     @Override
-    public MethodInterpreterResult visit(LongLiteralExpr n, MethodInterpreterContext arg) {
-        return MethodInterpreterResult.of(n.asNumber());
+    public Result visit(LongLiteralExpr n, MethodInterpreterContext ctx) {
+        return new Result(MethodInterpreterValue.of(n.asNumber()), ctx);
     }
 
     @Override
-    public MethodInterpreterResult visit(MethodCallExpr n, MethodInterpreterContext arg) {
+    public Result visit(MethodCallExpr n, MethodInterpreterContext arg) {
         ResolvedMethodDeclaration resolvedMethod = n.resolve();
         Method method = methodReflection(resolvedMethod);
         Object scope;
         if (resolvedMethod.isStatic()) {
             scope = null;
         } else {
-            scope = n.getScope().orElseThrow().accept(this, arg).asValue().get();
+            scope = n.getScope().orElseThrow().accept(this, arg).value().get();
         }
         List<Object> args = n.getArguments().stream().map(it -> it.accept(this, arg))
-                .map(it -> ((MethodInterpreterResult.Value) it).get())
+                .map(it -> it.value().get())
                 .toList();
         try {
-            return MethodInterpreterResult.of(method.invoke(scope, args.toArray()));
+            return new Result(MethodInterpreterValue.of(method.invoke(scope, args.toArray())), arg);
         } catch (IllegalAccessException | InvocationTargetException e) {
             throw new AssertionError(e);
         }
@@ -388,42 +123,42 @@ public class MethodInterpreter extends GenericVisitorWithDefaults<MethodInterpre
     }
 
     @Override
-    public MethodInterpreterResult visit(MethodDeclaration n, MethodInterpreterContext arg) {
+    public Result visit(MethodDeclaration n, MethodInterpreterContext arg) {
         BlockStmt result = n.getBody().orElseThrow(() -> new AssertionError("Abstract Method is not allow"));
         return result.accept(this, arg);
     }
 
     @Override
-    public MethodInterpreterResult visit(NullLiteralExpr n, MethodInterpreterContext arg) {
-        return MethodInterpreterResult.of(null);
+    public Result visit(NullLiteralExpr n, MethodInterpreterContext ctx) {
+        return new Result(MethodInterpreterValue.of(null), ctx);
     }
 
     @Override
-    public MethodInterpreterResult visit(ReturnStmt n, MethodInterpreterContext arg) {
+    public Result visit(ReturnStmt n, MethodInterpreterContext arg) {
         if (n.getExpression().isPresent()) {
             return n.getExpression().get().accept(this, arg);
         } else {
-            return MethodInterpreterResult.noValue();
+            return new Result(MethodInterpreterValue.voidValue(), arg);
         }
     }
 
     @Override
-    public MethodInterpreterResult visit(StringLiteralExpr n, MethodInterpreterContext arg) {
-        return MethodInterpreterResult.of(n.getValue());
+    public Result visit(StringLiteralExpr n, MethodInterpreterContext ctx) {
+        return new Result(MethodInterpreterValue.of(n.getValue()), ctx);
     }
 
     @Override
-    public MethodInterpreterResult visit(TextBlockLiteralExpr n, MethodInterpreterContext arg) {
-        return MethodInterpreterResult.of(n.getValue());
+    public Result visit(TextBlockLiteralExpr n, MethodInterpreterContext ctx) {
+        return new Result(MethodInterpreterValue.of(n.getValue()), ctx);
     }
 
     @Override
-    public MethodInterpreterResult defaultAction(Node n, MethodInterpreterContext arg) {
+    public Result defaultAction(Node n, MethodInterpreterContext arg) {
         throw new AssertionError("Unhandled node: " + n.getClass());
     }
 
     @Override
-    public MethodInterpreterResult defaultAction(NodeList n, MethodInterpreterContext arg) {
+    public Result defaultAction(NodeList n, MethodInterpreterContext arg) {
         throw new AssertionError("Unhandled node: " + n);
     }
 }
