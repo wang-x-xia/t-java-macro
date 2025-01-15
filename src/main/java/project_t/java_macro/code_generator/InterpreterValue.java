@@ -2,44 +2,38 @@ package project_t.java_macro.code_generator;
 
 import java.util.Objects;
 
-public class MethodInterpreterValue {
+public class InterpreterValue {
 
-    private static final MethodInterpreterValue UNKNOWN_VALUE = new MethodInterpreterValue(true, true, null, null);
+    private static final InterpreterValue UNKNOWN_VALUE = new InterpreterValue(true, null, null);
 
-    public static MethodInterpreterValue unknown() {
+    public static InterpreterValue unknown() {
         return UNKNOWN_VALUE;
     }
 
-    private static final MethodInterpreterValue VOID_VALUE = new MethodInterpreterValue(true, false, null, Void.class);
+    private static final InterpreterValue VOID_VALUE = new InterpreterValue(false, null, Void.class);
 
-    public static MethodInterpreterValue voidValue() {
+    public static InterpreterValue voidValue() {
         return VOID_VALUE;
     }
 
-    private static final MethodInterpreterValue NULL_VALUE = new MethodInterpreterValue(true, false, null, null);
+    private static final InterpreterValue NULL_VALUE = new InterpreterValue(false, null, null);
 
-    public static MethodInterpreterValue of(Object value) {
+    public static InterpreterValue of(Object value) {
         if (value == null) {
             return NULL_VALUE;
         }
-        return new MethodInterpreterValue(true, false, value, value.getClass());
+        return new InterpreterValue(false, value, value.getClass());
     }
 
 
-    private final boolean hasValue;
     private final boolean unknown;
     private final Object value;
     private final Class<?> type;
 
-    private MethodInterpreterValue(boolean hasValue, boolean unknown, Object value, Class<?> type) {
-        this.hasValue = hasValue;
+    private InterpreterValue(boolean unknown, Object value, Class<?> type) {
         this.unknown = unknown;
         this.value = value;
         this.type = type;
-    }
-
-    public boolean hasValue() {
-        return hasValue;
     }
 
     public boolean isUnknown() {
@@ -101,7 +95,7 @@ public class MethodInterpreterValue {
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
-        MethodInterpreterValue value1 = (MethodInterpreterValue) o;
+        InterpreterValue value1 = (InterpreterValue) o;
         return Objects.equals(value, value1.value);
     }
 

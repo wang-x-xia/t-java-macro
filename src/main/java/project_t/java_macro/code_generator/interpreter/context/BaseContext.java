@@ -1,23 +1,23 @@
 package project_t.java_macro.code_generator.interpreter.context;
 
-import project_t.java_macro.code_generator.MethodInterpreterContext;
-import project_t.java_macro.code_generator.MethodInterpreterValue;
+import project_t.java_macro.code_generator.InterpreterContext;
+import project_t.java_macro.code_generator.InterpreterValue;
 
-public class BaseContext implements MethodInterpreterContext {
+public class BaseContext implements InterpreterContext {
 
-    final MethodInterpreterContext parent;
+    final InterpreterContext parent;
 
-    public BaseContext(MethodInterpreterContext parent) {
+    public BaseContext(InterpreterContext parent) {
         this.parent = parent;
     }
 
     @Override
-    public MethodInterpreterValue get(String name) {
+    public InterpreterValue get(String name) {
         return this.parent.get(name);
     }
 
     @Override
-    public MethodInterpreterContext exitBlock(MethodInterpreterContext block) {
+    public InterpreterContext exitBlock(InterpreterContext block) {
         return this.parent.exitBlock(block);
     }
 }

@@ -1,19 +1,19 @@
 package project_t.java_macro.code_generator.interpreter.context;
 
-import project_t.java_macro.code_generator.MethodInterpreterContext;
-import project_t.java_macro.code_generator.MethodInterpreterValue;
+import project_t.java_macro.code_generator.InterpreterContext;
+import project_t.java_macro.code_generator.InterpreterValue;
 
-public class Root implements MethodInterpreterContext {
+public class Root implements InterpreterContext {
     public Root() {
     }
 
     @Override
-    public MethodInterpreterValue get(String name) {
+    public InterpreterValue get(String name) {
         throw new IllegalArgumentException("Unknown var " + name);
     }
 
     @Override
-    public MethodInterpreterContext exitBlock(MethodInterpreterContext block) {
+    public InterpreterContext exitBlock(InterpreterContext block) {
         throw new IllegalArgumentException("Unknown block " + block);
     }
 }

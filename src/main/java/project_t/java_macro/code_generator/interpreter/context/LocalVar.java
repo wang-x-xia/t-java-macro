@@ -1,21 +1,21 @@
 package project_t.java_macro.code_generator.interpreter.context;
 
-import project_t.java_macro.code_generator.MethodInterpreterContext;
-import project_t.java_macro.code_generator.MethodInterpreterValue;
+import project_t.java_macro.code_generator.InterpreterContext;
+import project_t.java_macro.code_generator.InterpreterValue;
 
 public class LocalVar extends BaseContext {
 
     private final String name;
-    private final MethodInterpreterValue value;
+    private final InterpreterValue value;
 
-    public LocalVar(MethodInterpreterContext parent, String name, MethodInterpreterValue value) {
+    public LocalVar(InterpreterContext parent, String name, InterpreterValue value) {
         super(parent);
         this.name = name;
         this.value = value;
     }
 
     @Override
-    public MethodInterpreterValue get(String name) {
+    public InterpreterValue get(String name) {
         if (name.equals(this.name)) {
             return value;
         }

@@ -12,7 +12,7 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
 
-public class ExpressionInterpreter extends GenericVisitorWithDefaults<ExpressionInterpreter.Result, MethodInterpreterContext> {
+public class ExpressionInterpreter extends GenericVisitorWithDefaults<ExpressionInterpreter.Result, InterpreterContext> {
 
     private static final ExpressionInterpreter INSTANCE = new ExpressionInterpreter();
 
@@ -20,36 +20,36 @@ public class ExpressionInterpreter extends GenericVisitorWithDefaults<Expression
         return INSTANCE;
     }
 
-    public record Result(MethodInterpreterValue value, MethodInterpreterContext context) {
+    public record Result(InterpreterValue value, InterpreterContext context) {
     }
 
     @Override
-    public Result visit(BooleanLiteralExpr n, MethodInterpreterContext ctx) {
-        return new Result(MethodInterpreterValue.of(n.getValue()), ctx);
+    public Result visit(BooleanLiteralExpr n, InterpreterContext ctx) {
+        return new Result(InterpreterValue.of(n.getValue()), ctx);
     }
 
     @Override
-    public Result visit(CharLiteralExpr n, MethodInterpreterContext ctx) {
-        return new Result(MethodInterpreterValue.of(n.asChar()), ctx);
+    public Result visit(CharLiteralExpr n, InterpreterContext ctx) {
+        return new Result(InterpreterValue.of(n.asChar()), ctx);
     }
 
     @Override
-    public Result visit(DoubleLiteralExpr n, MethodInterpreterContext ctx) {
-        return new Result(MethodInterpreterValue.of(n.asDouble()), ctx);
+    public Result visit(DoubleLiteralExpr n, InterpreterContext ctx) {
+        return new Result(InterpreterValue.of(n.asDouble()), ctx);
     }
 
     @Override
-    public Result visit(IntegerLiteralExpr n, MethodInterpreterContext ctx) {
-        return new Result(MethodInterpreterValue.of(n.asNumber()), ctx);
+    public Result visit(IntegerLiteralExpr n, InterpreterContext ctx) {
+        return new Result(InterpreterValue.of(n.asNumber()), ctx);
     }
 
     @Override
-    public Result visit(LongLiteralExpr n, MethodInterpreterContext ctx) {
-        return new Result(MethodInterpreterValue.of(n.asNumber()), ctx);
+    public Result visit(LongLiteralExpr n, InterpreterContext ctx) {
+        return new Result(InterpreterValue.of(n.asNumber()), ctx);
     }
 
     @Override
-    public Result visit(MethodCallExpr n, MethodInterpreterContext arg) {
+    public Result visit(MethodCallExpr n, InterpreterContext arg) {
         ResolvedMethodDeclaration resolvedMethod = n.resolve();
         Method method = methodReflection(resolvedMethod);
         Object scope;
@@ -62,7 +62,7 @@ public class ExpressionInterpreter extends GenericVisitorWithDefaults<Expression
                 .map(it -> it.value().get())
                 .toList();
         try {
-            return new Result(MethodInterpreterValue.of(method.invoke(scope, args.toArray())), arg);
+            return new Result(InterpreterValue.of(method.invoke(scope, args.toArray())), arg);
         } catch (IllegalAccessException | InvocationTargetException e) {
             throw new AssertionError(e);
         }
@@ -84,22 +84,22 @@ public class ExpressionInterpreter extends GenericVisitorWithDefaults<Expression
     }
 
     @Override
-    public Result visit(NullLiteralExpr n, MethodInterpreterContext ctx) {
-        return new Result(MethodInterpreterValue.of(null), ctx);
+    public Result visit(NullLiteralExpr n, InterpreterContext ctx) {
+        return new Result(InterpreterValue.of(null), ctx);
     }
 
     @Override
-    public Result visit(StringLiteralExpr n, MethodInterpreterContext ctx) {
-        return new Result(MethodInterpreterValue.of(n.getValue()), ctx);
+    public Result visit(StringLiteralExpr n, InterpreterContext ctx) {
+        return new Result(InterpreterValue.of(n.getValue()), ctx);
     }
 
     @Override
-    public Result visit(TextBlockLiteralExpr n, MethodInterpreterContext ctx) {
-        return new Result(MethodInterpreterValue.of(n.getValue()), ctx);
+    public Result visit(TextBlockLiteralExpr n, InterpreterContext ctx) {
+        return new Result(InterpreterValue.of(n.getValue()), ctx);
     }
 
     @Override
-    public Result defaultAction(Node n, MethodInterpreterContext arg) {
+    public Result defaultAction(Node n, InterpreterContext arg) {
         if (n instanceof Expression) {
             throw new IllegalArgumentException("Node is not supported yet, " + n.getClass());
         }
@@ -107,7 +107,7 @@ public class ExpressionInterpreter extends GenericVisitorWithDefaults<Expression
     }
 
     @Override
-    public Result defaultAction(NodeList n, MethodInterpreterContext arg) {
+    public Result defaultAction(NodeList n, InterpreterContext arg) {
         throw new AssertionError("NodeList is not expr");
     }
 }

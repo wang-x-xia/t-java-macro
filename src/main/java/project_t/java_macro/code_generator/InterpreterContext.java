@@ -4,9 +4,9 @@ import project_t.java_macro.code_generator.interpreter.context.Block;
 import project_t.java_macro.code_generator.interpreter.context.LocalVar;
 import project_t.java_macro.code_generator.interpreter.context.Root;
 
-public interface MethodInterpreterContext {
+public interface InterpreterContext {
 
-    static MethodInterpreterContext root() {
+    static InterpreterContext root() {
         return new Root();
     }
 
@@ -14,7 +14,7 @@ public interface MethodInterpreterContext {
      * @param name is the local var name
      * @return is the value of local var
      */
-    MethodInterpreterValue get(String name);
+    InterpreterValue get(String name);
 
     /**
      * Declare a local var
@@ -22,7 +22,7 @@ public interface MethodInterpreterContext {
      * @param name is the local var name
      * @return new context
      */
-    default MethodInterpreterContext localVar(String name) {
+    default InterpreterContext localVar(String name) {
         return new LocalVar(this, name, null);
     }
 
@@ -31,10 +31,7 @@ public interface MethodInterpreterContext {
      * @param value is the new value
      * @return new context
      */
-    default MethodInterpreterContext set(String name, MethodInterpreterValue value) {
-        if (!value.hasValue()) {
-            throw new IllegalArgumentException("If declare a new local var, use localVar()");
-        }
+    default InterpreterContext set(String name, InterpreterValue value) {
         return new LocalVar(this, name, value);
     }
 
@@ -43,7 +40,7 @@ public interface MethodInterpreterContext {
      *
      * @return new context
      */
-    default MethodInterpreterContext enterBlock() {
+    default InterpreterContext enterBlock() {
         return new Block(this);
     }
 
@@ -52,5 +49,5 @@ public interface MethodInterpreterContext {
      *
      * @return new context
      */
-    MethodInterpreterContext exitBlock(MethodInterpreterContext block);
+    InterpreterContext exitBlock(InterpreterContext block);
 }

@@ -37,9 +37,9 @@ class MethodInterpreterTest {
                 .orElseThrow();
         return AnnotationSupport.findAnnotatedMethods(MethodInterpreterTest.class, NoArgTest.class, HierarchyTraversalMode.TOP_DOWN)
                 .stream().map(method -> DynamicTest.dynamicTest(method.getName(), () -> {
-                    MethodInterpreter.Result actual = classDeclaration.getMethodsByName(method.getName()).get(0).accept(new MethodInterpreter(), MethodInterpreterContext.root());
+                    MethodInterpreter.Result actual = classDeclaration.getMethodsByName(method.getName()).get(0).accept(new MethodInterpreter(), InterpreterContext.root());
                     if (method.getReturnType() == void.class) {
-                        assertEquals(MethodInterpreterValue.voidValue(), actual.returnValue(),
+                        assertEquals(InterpreterValue.voidValue(), actual.returnValue(),
                                 "Void method should return no value");
                     } else {
                         assertEquals(method.invoke(this), actual.returnValue().get(),

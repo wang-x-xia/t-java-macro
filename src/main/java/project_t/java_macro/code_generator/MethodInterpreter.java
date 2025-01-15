@@ -9,22 +9,22 @@ import com.github.javaparser.ast.stmt.ReturnStmt;
 import com.github.javaparser.ast.stmt.Statement;
 import com.github.javaparser.ast.visitor.GenericVisitorWithDefaults;
 
-public class MethodInterpreter extends GenericVisitorWithDefaults<MethodInterpreter.Result, MethodInterpreterContext> {
+public class MethodInterpreter extends GenericVisitorWithDefaults<MethodInterpreter.Result, InterpreterContext> {
 
-    public record Result(MethodInterpreterValue returnValue, MethodInterpreterContext context) {
+    public record Result(InterpreterValue returnValue, InterpreterContext context) {
         public boolean hasReturn() {
             return returnValue != null;
         }
     }
 
     @Override
-    public Result visit(BlockStmt n, MethodInterpreterContext ctx) {
-        MethodInterpreterContext block = ctx.enterBlock();
+    public Result visit(BlockStmt n, InterpreterContext ctx) {
+        InterpreterContext block = ctx.enterBlock();
         ctx = block;
         NodeList<Statement> list = n.getStatements();
         for (Statement statement : list) {
             Result result = statement.accept(this, ctx);
-            if (result.returnValue().hasValue()) {
+            if (result.hasReturn()) {
                 // If the statement return value, return it and skip following statements
                 return new Result(result.returnValue(), result.context().exitBlock(block));
             }
@@ -34,14 +34,11 @@ public class MethodInterpreter extends GenericVisitorWithDefaults<MethodInterpre
     }
 
     @Override
-    public Result visit(IfStmt n, MethodInterpreterContext ctx) {
+    public Result visit(IfStmt n, InterpreterContext ctx) {
         ExpressionInterpreter.Result condition = n.getCondition().accept(ExpressionInterpreter.getInstance(), ctx);
         if (condition.context() != ctx) {
             // TODO
             throw new RuntimeException("Current interpreter can't process pattern match");
-        }
-        if (!(condition.value().hasValue())) {
-            throw new RuntimeException("The if condition must have return value");
         }
         if (condition.value().isUnknown()) {
             throw new RuntimeException("Current interpreter can't process unknown if");
@@ -57,33 +54,33 @@ public class MethodInterpreter extends GenericVisitorWithDefaults<MethodInterpre
     }
 
     @Override
-    public Result visit(MethodDeclaration n, MethodInterpreterContext arg) {
+    public Result visit(MethodDeclaration n, InterpreterContext arg) {
         BlockStmt body = n.getBody().orElseThrow(() -> new AssertionError("Abstract Method is not allow"));
         Result result = body.accept(this, arg);
         if (!result.hasReturn()) {
-            return new Result(MethodInterpreterValue.voidValue(), result.context());
+            return new Result(InterpreterValue.voidValue(), result.context());
         } else {
             return result;
         }
     }
 
     @Override
-    public Result visit(ReturnStmt n, MethodInterpreterContext arg) {
+    public Result visit(ReturnStmt n, InterpreterContext arg) {
         if (n.getExpression().isPresent()) {
             ExpressionInterpreter.Result result = n.getExpression().get().accept(ExpressionInterpreter.getInstance(), arg);
             return new Result(result.value(), result.context());
         } else {
-            return new Result(MethodInterpreterValue.voidValue(), arg);
+            return new Result(InterpreterValue.voidValue(), arg);
         }
     }
 
     @Override
-    public Result defaultAction(Node n, MethodInterpreterContext arg) {
+    public Result defaultAction(Node n, InterpreterContext arg) {
         throw new AssertionError("Unhandled node: " + n.getClass());
     }
 
     @Override
-    public Result defaultAction(NodeList n, MethodInterpreterContext arg) {
+    public Result defaultAction(NodeList n, InterpreterContext arg) {
         throw new AssertionError("Unhandled node: " + n);
     }
 }
