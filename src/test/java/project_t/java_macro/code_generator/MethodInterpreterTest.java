@@ -39,10 +39,10 @@ class MethodInterpreterTest {
                 .stream().map(method -> DynamicTest.dynamicTest(method.getName(), () -> {
                     MethodInterpreter.Result actual = classDeclaration.getMethodsByName(method.getName()).get(0).accept(new MethodInterpreter(), MethodInterpreterContext.root());
                     if (method.getReturnType() == void.class) {
-                        assertEquals(MethodInterpreterValue.noValue(), actual.value(),
+                        assertEquals(MethodInterpreterValue.voidValue(), actual.returnValue(),
                                 "Void method should return no value");
                     } else {
-                        assertEquals(method.invoke(this), actual.value().get(),
+                        assertEquals(method.invoke(this), actual.returnValue().get(),
                                 "Method should return expected value");
                     }
                 }));

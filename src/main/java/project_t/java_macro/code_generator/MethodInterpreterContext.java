@@ -23,7 +23,7 @@ public interface MethodInterpreterContext {
      * @return new context
      */
     default MethodInterpreterContext localVar(String name) {
-        return new LocalVar(this, name, MethodInterpreterValue.noValue());
+        return new LocalVar(this, name, null);
     }
 
     /**

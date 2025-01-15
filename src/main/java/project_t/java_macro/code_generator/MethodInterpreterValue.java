@@ -4,12 +4,6 @@ import java.util.Objects;
 
 public class MethodInterpreterValue {
 
-    private static final MethodInterpreterValue NO_VALUE = new MethodInterpreterValue(false, false, null, null);
-
-    public static MethodInterpreterValue noValue() {
-        return NO_VALUE;
-    }
-
     private static final MethodInterpreterValue UNKNOWN_VALUE = new MethodInterpreterValue(true, true, null, null);
 
     public static MethodInterpreterValue unknown() {
