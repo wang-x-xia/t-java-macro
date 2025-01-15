@@ -20,7 +20,7 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused"})
 class MethodInterpreterTest {
 
     @Retention(RetentionPolicy.RUNTIME)
@@ -50,6 +50,20 @@ class MethodInterpreterTest {
 
     @NoArgTest
     public void voidMethod() {
+    }
+
+    @SuppressWarnings({"OnlyOneElementUsed", "ResultOfMethodCallIgnored"})
+    @NoArgTest
+    public int statementMethod() {
+        "Test".charAt(0);
+        return 7;
+    }
+
+    @SuppressWarnings("UnnecessaryLocalVariable")
+    @NoArgTest
+    public int finalVar() {
+        int value = 10;
+        return value;
     }
 
     @NoArgTest

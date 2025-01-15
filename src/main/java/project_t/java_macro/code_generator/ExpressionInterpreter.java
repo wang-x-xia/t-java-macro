@@ -84,6 +84,11 @@ public class ExpressionInterpreter extends GenericVisitorWithDefaults<Expression
     }
 
     @Override
+    public Result visit(NameExpr n, InterpreterContext ctx) {
+        return new Result(ctx.get(n.getNameAsString()), ctx);
+    }
+
+    @Override
     public Result visit(NullLiteralExpr n, InterpreterContext ctx) {
         return new Result(InterpreterValue.of(null), ctx);
     }
@@ -91,6 +96,12 @@ public class ExpressionInterpreter extends GenericVisitorWithDefaults<Expression
     @Override
     public Result visit(StringLiteralExpr n, InterpreterContext ctx) {
         return new Result(InterpreterValue.of(n.getValue()), ctx);
+    }
+
+    @Override
+    public Result visit(VariableDeclarationExpr n, InterpreterContext ctx) {
+        // It's a statement
+        throw new AssertionError("VariableDeclarationExpr is not expr");
     }
 
     @Override

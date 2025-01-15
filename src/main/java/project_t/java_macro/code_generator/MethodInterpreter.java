@@ -3,10 +3,9 @@ package project_t.java_macro.code_generator;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.MethodDeclaration;
-import com.github.javaparser.ast.stmt.BlockStmt;
-import com.github.javaparser.ast.stmt.IfStmt;
-import com.github.javaparser.ast.stmt.ReturnStmt;
-import com.github.javaparser.ast.stmt.Statement;
+import com.github.javaparser.ast.body.VariableDeclarator;
+import com.github.javaparser.ast.expr.VariableDeclarationExpr;
+import com.github.javaparser.ast.stmt.*;
 import com.github.javaparser.ast.visitor.GenericVisitorWithDefaults;
 
 public class MethodInterpreter extends GenericVisitorWithDefaults<MethodInterpreter.Result, InterpreterContext> {
@@ -31,6 +30,16 @@ public class MethodInterpreter extends GenericVisitorWithDefaults<MethodInterpre
             ctx = result.context();
         }
         return new Result(null, ctx.exitBlock(block));
+    }
+
+    @Override
+    public Result visit(ExpressionStmt n, InterpreterContext ctx) {
+        if (n.getExpression().isVariableDeclarationExpr()) {
+            // Process LocalVariableDeclarationStatement
+            return visit(n.getExpression().asVariableDeclarationExpr(), ctx);
+        }
+        // Ignore the value of expression
+        return new Result(null, n.getExpression().accept(ExpressionInterpreter.getInstance(), ctx).context());
     }
 
     @Override
@@ -72,6 +81,19 @@ public class MethodInterpreter extends GenericVisitorWithDefaults<MethodInterpre
         } else {
             return new Result(InterpreterValue.voidValue(), arg);
         }
+    }
+
+    @Override
+    public Result visit(VariableDeclarationExpr n, InterpreterContext ctx) {
+        NodeList<VariableDeclarator> variables = n.getVariables();
+        for (VariableDeclarator variable : variables) {
+            ctx = ctx.localVar(variable.getNameAsString());
+            if (variable.getInitializer().isPresent()) {
+                ExpressionInterpreter.Result result = variable.getInitializer().get().accept(ExpressionInterpreter.getInstance(), ctx);
+                ctx = ctx.set(variable.getNameAsString(), result.value());
+            }
+        }
+        return new Result(null, ctx);
     }
 
     @Override

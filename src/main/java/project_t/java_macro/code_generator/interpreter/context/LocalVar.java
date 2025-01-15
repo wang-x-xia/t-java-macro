@@ -17,9 +17,11 @@ public class LocalVar extends BaseContext {
     @Override
     public InterpreterValue get(String name) {
         if (name.equals(this.name)) {
+            if (value == null) {
+                throw new IllegalStateException("The var is not initialized, " + name);
+            }
             return value;
         }
         return super.get(name);
     }
-
 }
