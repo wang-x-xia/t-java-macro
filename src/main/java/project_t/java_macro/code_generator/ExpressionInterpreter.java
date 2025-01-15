@@ -24,6 +24,19 @@ public class ExpressionInterpreter extends GenericVisitorWithDefaults<Expression
     }
 
     @Override
+    public Result visit(AssignExpr n, InterpreterContext ctx) {
+        if (n.getTarget().isNameExpr()) {
+            String name = n.getTarget().asNameExpr().getNameAsString();
+            if (n.getOperator() == AssignExpr.Operator.ASSIGN) {
+                Result result = n.getValue().accept(this, ctx);
+                return new Result(result.value(), result.context().set(name, result.value()));
+            }
+            throw new AssertionError("Operator is not support yet, " + n.getOperator());
+        }
+        throw new AssertionError("Target is not support yet, " + n.getTarget().getClass());
+    }
+
+    @Override
     public Result visit(BooleanLiteralExpr n, InterpreterContext ctx) {
         return new Result(InterpreterValue.of(n.getValue()), ctx);
     }

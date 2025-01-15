@@ -66,6 +66,13 @@ class MethodInterpreterTest {
         return value;
     }
 
+    @SuppressWarnings("UnusedAssignment")
+    @NoArgTest
+    public int mutableVar() {
+        int value = 10;
+        return value = 3;
+    }
+
     @NoArgTest
     public String stringLiteral() {
         return "ok";
